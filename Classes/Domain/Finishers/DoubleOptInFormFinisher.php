@@ -190,9 +190,12 @@ final class DoubleOptInFormFinisher extends EmailFinisher
             throw new FinisherException('The option "senderAddress" must be set for the DoubleOptInFormFinisher.', 1_327_060_210);
         }
 
+        $useFormLinkInEmail = $this->parseOption('useFormLinkInEmail');
+
         $mail = $this->initializeFluidEmail($formRuntime)
             ->format($addHtmlPart ? FluidEmail::FORMAT_BOTH : FluidEmail::FORMAT_PLAIN)
             ->assign('title', $subject)
+            ->assign('useFormLinkInEmail', $useFormLinkInEmail)
             ->assign('optIn', $optIn)
             ->assign('validationPid', $validationPid);
 
