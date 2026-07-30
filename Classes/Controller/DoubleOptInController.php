@@ -38,9 +38,32 @@ class DoubleOptInController extends ActionController
 
                 if (!$isAlreadyValidated && $notificationMailEnable) {
                     if ($usePreparedEmail) {
+                        $mailData = json_decode($optIn->getMailBody(),true, 512, JSON_THROW_ON_ERROR);
+                        if($this->settings['notificationMailMultipleReceiversInBCC']) {
+                            $recipientsArray = $mailData['recipientsArray'] ?? [];
+                            $blindCarbonCopyRecipientsArray = $mailData['blindCarbonCopyRecipientsArray'] ?? [];
+                            if(count($recipientsArray) > 1) {
+                                $i = 0;
+                                foreach ($recipientsArray as $recipient) {
+                                    if($i > 0) {
+                                        $blindCarbonCopyRecipientsArray[] = $recipient;
+                                    }
+                                    else {
+                                        $mainRecipient = $recipient;
+                                    }
+                                    $i++;
+                                }
+                            }
+                            else {
+                                $mainRecipient = $recipientsArray[0];
+                            }
+                            $mailData['recipientsArray'] = [$mainRecipient];
+                            $mailData['blindCarbonCopyRecipientsArray'] = $blindCarbonCopyRecipientsArray;
+                        }
+
                         // Prepared e-mail with full power of the form extension
                         if ($optIn->getMailBody() !== '') {
-                            $this->mailToReceiverService->sendPreparedMail(json_decode($optIn->getMailBody(), true, 512, JSON_THROW_ON_ERROR));
+                            $this->mailToReceiverService->sendPreparedMail($mailData);
                         }
                     } else {
                         // Simple notification e-mail
